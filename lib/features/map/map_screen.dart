@@ -389,124 +389,265 @@ bool _isJourneyActive = false; // Yolculuk başladı mı?
   }
 
   void _showCamiDetails(Mosque cami) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (BuildContext context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 50,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.teal[300],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (BuildContext context) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Sürükleme Çubuğu
+            Center(
+              child: Container(
+                width: 50,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.teal[300],
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.teal[100],
-                    ),
-                    child: Icon(
-                      FontAwesomeIcons.mosque,
-                      color: Colors.teal[800],
-                      size: 30,
-                    ),
+            ),
+            const SizedBox(height: 20),
+
+            // Cami Bilgileri (İkon, İsim, Mesafe)
+            Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.teal[100],
                   ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          cami.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          "Mesafe: ${cami.distance.toStringAsFixed(0)} metre",
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
+                  child: Icon(
+                    FontAwesomeIcons.mosque,
+                    color: Colors.teal[800],
+                    size: 30,
                   ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.teal,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        cami.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        
-                        // SignalR'ı başlat ve callback'leri ayarla
-                        _signalRService.onLocationReceived = (friendId, lat, lon) {
-                          setState(() {
-                            _friendLocations[friendId] = LatLng(lat, lon);
-                          });
-                        };
-                        
-                        _signalRService.onUserLeft = (friendId) {
-                          setState(() {
-                            _friendLocations.remove(friendId);
-                          });
-                        };
-                        
-                        // SignalR bağlantısını başlat
-                        await _signalRService.initSignalR();
-                        
-                        // Seçilen camiye katıl
-                        await _signalRService.joinJourney(cami.id);
-                        
-                        // Yolculuğu aktif hale getir
-                        setState(() {
-                          _isJourneyActive = true;
-                          _activeMosqueId = cami.id;
-                        });
-                        
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${cami.name} için $_targetVakit rotası hazırlanıyor...'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.directions_walk),
-                      label: const Text('Namaza Git'),
-                    ),
+                      const SizedBox(height: 5),
+                      Text(
+                        "Mesafe: ${cami.distance.toStringAsFixed(0)} metre",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+                ),
+              ],
+            ),
+            const SizedBox(height: 25),
+
+            // --- BUTONLAR ---
+            Row(
+              children: [
+                // 1. BUTON: YOLA ÇIK (Senin SignalR Kodlarını Buraya Koydum)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Colors.teal),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(context); // Pencereyi kapat
+
+                      // --- MEVCUT SIGNALR MANTIĞINIZ (KORUNDU) ---
+                      _signalRService.onLocationReceived = (friendId, lat, lon) {
+                        setState(() {
+                          _friendLocations[friendId] = LatLng(lat, lon);
+                        });
+                      };
+
+                      _signalRService.onUserLeft = (friendId) {
+                        setState(() {
+                          _friendLocations.remove(friendId);
+                        });
+                      };
+
+                      // Emülatör/Cihaz ayrımı için BaseUrl (Düzeltme gerekebilir)
+                      // initSignalR metodunuza parametre alacak şekilde ayarladıysanız buraya URL girin.
+                      // Eğer parametresiz ise boş bırakın.
+                      await _signalRService.initSignalR(); 
+
+                      await _signalRService.joinJourney(cami.id);
+
+                      setState(() {
+                        _isJourneyActive = true;
+                        _activeMosqueId = cami.id;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${cami.name} için $_targetVakit rotası ve canlı takip başladı...'),
+                        ),
+                      );
+                      // -------------------------------------------
+                    },
+                    icon: const Icon(Icons.directions_walk, color: Colors.teal),
+                    label: const Text('Namaza Git', style: TextStyle(color: Colors.teal)),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // 2. BUTON: CHECK-IN YAP (Yeni Eklenen Puan Özelliği)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber, // Dikkat çekici renk
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context); // Pencereyi kapat
+                      _performCheckIn(cami);  // Backend'e sor ve puanı al
+                    },
+                    icon: const Icon(Icons.verified),
+                    label: const Text('Check-In'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+
+  // Check-In İşlemi
+Future<void> _performCheckIn(Mosque mosque) async {
+  // 1. Konumdan emin ol
+  if (currentPosition == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Konumunuz alınamadı, lütfen bekleyin.")),
     );
+    return;
   }
+
+  // Yükleniyor göstergesi
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => const Center(child: CircularProgressIndicator()),
+  );
+
+  // 2. API İsteği Hazırla
+  // Emülatör: 10.0.2.2, Gerçek Cihaz: PC IP'si
+  const String baseUrl = "http://10.0.2.2:5150"; 
+  final url = Uri.parse("$baseUrl/api/mosques/checkin");
+
+  try {
+    final body = json.encode({
+      "mosqueId": mosque.id,
+      "lat": currentPosition!.latitude,
+      "lon": currentPosition!.longitude,
+    });
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: body,
+    );
+
+    // Dialog'u kapat
+    if (mounted) Navigator.pop(context);
+
+    if (response.statusCode == 200) {
+      // --- BAŞARILI ---
+      final data = json.decode(response.body);
+      final message = data['message'] ?? "İşlem Başarılı";
+      final points = data['pointsEarned'] ?? 0;
+
+      _showSuccessDialog(message, points);
+    } else {
+      // --- HATA (Mesafe veya Süre) ---
+      // Backend'den gelen hata mesajını oku (örn: "50m yaklaşmalısınız")
+      String errorMessage = "Bir hata oluştu.";
+      try {
+         // Backend düz string dönerse diye kontrol:
+         errorMessage = response.body; 
+         // Veya JSON dönüyorsa: json.decode(response.body)['message'];
+      } catch (_) {}
+
+      _showErrorDialog(errorMessage);
+    }
+  } catch (e) {
+    if (mounted) Navigator.pop(context); // Dialog kapat
+    _showErrorDialog("Bağlantı hatası: $e");
+  }
+}
+
+// Başarılı olursa çıkacak havalı pencere
+void _showSuccessDialog(String message, int points) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.stars, color: Colors.amber, size: 30),
+          SizedBox(width: 10),
+          Text("Tebrikler!"),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(message),
+          const SizedBox(height: 20),
+          Text(
+            "+$points Puan",
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.teal),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text("Harika!"),
+        )
+      ],
+    ),
+  );
+}
+
+// Hata olursa çıkacak pencere
+void _showErrorDialog(String message) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Check-In Başarısız"),
+      content: Text(message), // Backend'den gelen "Uzaklığı kontrol et" mesajı burada yazar
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text("Tamam"),
+        )
+      ],
+    ),
+  );
+}
+
+
 }
